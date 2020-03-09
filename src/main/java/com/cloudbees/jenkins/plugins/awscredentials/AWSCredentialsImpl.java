@@ -245,7 +245,8 @@ public class AWSCredentialsImpl extends BaseAmazonWebServicesCredentials impleme
 
         @Override
         public String getDisplayName() {
-            return Messages.AWSCredentialsImpl_DisplayName();
+//            return Messages.AWSCredentialsImpl_DisplayName();
+            return "AWS Credentials";
         }
 
         public static final Integer DEFAULT_STS_TOKEN_DURATION = STS_CREDENTIALS_DURATION_SECONDS;
@@ -260,10 +261,12 @@ public class AWSCredentialsImpl extends BaseAmazonWebServicesCredentials impleme
                 return FormValidation.ok();
             }
             if (StringUtils.isBlank(accessKey)) {
-                return FormValidation.error(Messages.AWSCredentialsImpl_SpecifyAccessKeyId());
+//                return FormValidation.error(Messages.AWSCredentialsImpl_SpecifyAccessKeyId());
+                return FormValidation.error("Please specify the Access Key ID");
             }
             if (StringUtils.isBlank(secretKey)) {
-                return FormValidation.error(Messages.AWSCredentialsImpl_SpecifySecretAccessKey());
+//                return FormValidation.error(Messages.AWSCredentialsImpl_SpecifySecretAccessKey());
+                return FormValidation.error("Please specify the Secret Access Key");
             }
 
             AWSCredentials awsCredentials = new BasicAWSCredentials(accessKey, Secret.fromString(secretKey).getPlainText());
@@ -276,7 +279,8 @@ public class AWSCredentialsImpl extends BaseAmazonWebServicesCredentials impleme
 
                 if(!StringUtils.isBlank(iamMfaSerialNumber)) {
                     if(StringUtils.isBlank(iamMfaToken)) {
-                        return FormValidation.error(Messages.AWSCredentialsImpl_SpecifyMFAToken());
+//                        return FormValidation.error(Messages.AWSCredentialsImpl_SpecifyMFAToken());
+                        return FormValidation.error("If the MFA Serial Number/ARN is specified, then a one time token is necessary to validate these credentials");
                     }
                     assumeRequest = assumeRequest
                             .withSerialNumber(iamMfaSerialNumber)
@@ -293,7 +297,8 @@ public class AWSCredentialsImpl extends BaseAmazonWebServicesCredentials impleme
                             assumeResult.getCredentials().getSessionToken());
                 } catch(AmazonServiceException e) {
                     LOGGER.log(Level.WARNING, "Unable to assume role [" + iamRoleArn + "] with request [" + assumeRequest + "]", e);
-                    return FormValidation.error(Messages.AWSCredentialsImpl_NotAbleToAssumeRole() + " Check the Jenkins log for more details");
+//                    return FormValidation.error(Messages.AWSCredentialsImpl_NotAbleToAssumeRole() + " Check the Jenkins log for more details");
+                    return FormValidation.error("There was an error assuming the specified IAM role, a MFA may be required by your organization." + " Check the Jenkins log for more details");
                 }
             }
 
@@ -303,14 +308,16 @@ public class AWSCredentialsImpl extends BaseAmazonWebServicesCredentials impleme
             String region = "us-east-1";
             try {
                 DescribeAvailabilityZonesResult zonesResult = ec2.describeAvailabilityZones();
-                return FormValidation
-                        .ok(Messages.AWSCredentialsImpl_CredentialsValidWithAccessToNZones(
-                                zonesResult.getAvailabilityZones().size()));
+                return FormValidation.ok();
+                        /*.ok(Messages.AWSCredentialsImpl_CredentialsValidWithAccessToNZones(
+                                zonesResult.getAvailabilityZones().size()));*/
             } catch (AmazonServiceException e) {
                 if (HttpURLConnection.HTTP_UNAUTHORIZED == e.getStatusCode()) {
-                    return FormValidation.warning(Messages.AWSCredentialsImpl_CredentialsInValid(e.getMessage()));
+//                    return FormValidation.warning(Messages.AWSCredentialsImpl_CredentialsInValid(e.getMessage()));
+                    return FormValidation.warning("These credentials are NOT valid");
                 } else if (HttpURLConnection.HTTP_FORBIDDEN == e.getStatusCode()) {
-                    return FormValidation.ok(Messages.AWSCredentialsImpl_CredentialsValidWithoutAccessToAwsServiceInZone(e.getServiceName(), region, e.getErrorMessage() + " (" + e.getErrorCode() + ")"));
+//                    return FormValidation.ok(Messages.AWSCredentialsImpl_CredentialsValidWithoutAccessToAwsServiceInZone(e.getServiceName(), region, e.getErrorMessage() + " (" + e.getErrorCode() + ")"));
+                    return FormValidation.ok("These credentials are valid but do not have access to the \"{0}\" service in the region \"{1}\". This message is not a problem if you need to access to other services or to other regions. Message: \"{2}\"");
                 } else {
                     return FormValidation.error(e.getMessage());
                 }
